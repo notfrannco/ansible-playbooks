@@ -1,0 +1,31 @@
+---
+- name: Playbook para agregar usuario ansible
+  hosts: # todos los nodos a administrar 
+  become: True
+  tasks:
+    - name: asegurarse que existe el grupo ansible 
+      group:
+        name: ansible
+        state: present
+
+    - name: Permitir passwordless sudo para el grupo ansible
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: "%ansible ALL=(ALL) NOPASSWD: ALL"
+        validate: "visudo -cf %s"
+        
+    - name: add user
+      user:
+        name: "ansible"
+        groups: ansible 
+        state: present
+        password: # encrypt passwd 
+
+    - name: Set ssh keybase login
+      authorized_key:
+        user: ansible
+        key: "{{ item }}"
+      with_file:
+        - /home/ansible/.ssh/id_rsa.pub
+...

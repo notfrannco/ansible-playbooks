@@ -1,0 +1,29 @@
+---
+- name: Playbook running jboss cli scripts
+  hosts: jbsmaster
+  become: True
+  gather_facts: False
+  vars:
+    deploy_cli: jbs_domain_deploy.py 
+    jboss_host: '{{ groups["jbsmaster"][0] }}' # first host on jbsmaster group
+    server_group: '{{ group }}' 
+    location: '{{ war }}'
+  tasks:
+    - name: copy deploy script 
+      template:
+        src: files/{{ deploy_cli }}
+        dest: /opt/jboss-eap-7.1/bin/{{ deploy_cli }}
+        owner: ansible
+        group: ansible
+        mode: 755
+
+    - name: deploying app 
+      shell: ./{{ deploy_cli }} {{ location }} {{ group }} {{ jboss_host }}
+      args:
+        chdir: /opt/jboss-eap-7.1/bin
+
+    - name: clean up
+      file:
+        path: /opt/jboss-eap-7.1/bin/{{ deploy_cli }}
+        state: absent
+...
