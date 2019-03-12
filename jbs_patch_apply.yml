@@ -1,0 +1,31 @@
+---
+- name: Playbook for patch apply on JBoss EAP
+  hosts: all
+  vars:
+    patch_file: "patch file name" 
+    jboss_home: "JBOSS_HOME"/bin/
+  become: true
+  serial: 1
+  tasks: 
+    - name: Copy patch file 
+      copy:
+        src: 'files/{{ patch_file }}' 
+        dest: '/tmp/'
+        mode: 755
+
+    - name: Run patch script                    
+      shell: './jboss-cli.sh --command="patch apply /tmp/{{ patch_file }}"'
+      args:
+        chdir: '{{ jboss_home }}'
+      ignore_errors: true
+
+    - name: restart jboss eap services
+      service:
+        name: jboss-eap
+        state: restarted
+
+    - name: cleanup
+      file:
+        path: "/tmp/{{ patch_file }}"
+        state: absent
+...

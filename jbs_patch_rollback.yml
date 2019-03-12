@@ -1,0 +1,19 @@
+---
+- name: Playbook for patch rollback on JBoss EAP
+  hosts: all
+  gather_facts: false
+  vars:
+    jboss_home: "JBOSS_HOME"/bin/
+  become: true
+  serial: 1
+  tasks: 
+    - name: Patch rollback 
+      shell: './jboss-cli.sh "patch rollback --reset-configuration=true"'
+      args:
+        chdir: '{{ jboss_home }}'
+
+    - name: restart jboss eap services
+      service:
+        name: jboss-eap
+        state: restarted
+...
