@@ -1,9 +1,8 @@
 ---
 - name: Playbook para agregar usuario ansible
   hosts: # todos los nodos a administrar 
-  become: True
   tasks:
-    - name: asegurarse que existe el grupo ansible 
+    - name: asegurarse que existe el grupo ansible
       group:
         name: ansible
         state: present
@@ -15,12 +14,14 @@
         line: "%ansible ALL=(ALL) NOPASSWD: ALL"
         validate: "visudo -cf %s"
         
-    - name: add user
+    - name: add user ansible
       user:
         name: "ansible"
-        groups: ansible 
+        group: ansible
+        home: /home/ansible/
+        shell: /bin/bash
         state: present
-        password: # encrypt passwd 
+        password: # encrypt passwd
 
     - name: Set ssh keybase login
       authorized_key:
