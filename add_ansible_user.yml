@@ -7,13 +7,11 @@
         name: ansible
         state: present
 
-    - name: Permitir passwordless sudo para el grupo ansible
-      lineinfile:
-        dest: /etc/sudoers
-        state: present
-        line: "%ansible ALL=(ALL) NOPASSWD: ALL"
-        validate: "visudo -cf %s"
-        
+    - name: add ansible sudoers file
+      copy:
+        content: "%ansible ALL=(ALL) NOPASSWD: ALL"
+        dest: /etc/sudoers.d/ansible
+
     - name: add user ansible
       user:
         name: "ansible"
