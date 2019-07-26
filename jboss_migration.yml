@@ -26,29 +26,3 @@
     # resultado de la migracion
     - debug: 
         msg: "{{resultado.stdout}}"
-
-    - name: update jboss eap service daemon 
-      lineinfile:
-        path: /etc/default/jboss-eap.conf
-        regexp: 'JBOSS_HOME='
-        line: JBOSS_HOME={{ new_eap_home }}
-
-    - name: restart jboss-eap service
-      service:
-        name: "{{ eap_service }}"
-        state: restarted
-
-
-    # workaround error de permisos en algunos folder al iniciar por primera vez, (data,log, content)
-    - name: stop jboss-eap service
-      service:
-        name: "{{ eap_service }}"
-        state: stopped 
-
-    - name: change permissions
-      shell: chown -R jboss:jboss {{ new_eap_home }}
-
-    - name: start jboss-eap service
-      service: 
-        name: "{{ eap_service }}"
-        state: started

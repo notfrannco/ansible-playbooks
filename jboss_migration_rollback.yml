@@ -1,0 +1,22 @@
+---
+- name: JBoss eap migration
+  hosts: all
+  become: true
+  serial: 1
+  gather_facts: false
+  vars:
+    current_eap_home: "/opt/jboss-eap-7.2"
+    old_eap_home: "/opt/jboss-eap-7.1"
+    eap_service: "jboss-eap"
+
+  tasks:
+    - name: update jboss eap service daemon 
+      lineinfile:
+        path: /etc/default/jboss-eap.conf
+        regexp: 'JBOSS_HOME='
+        line: JBOSS_HOME={{ old_eap_home }}
+
+    - name: restart jboss-eap service
+      service:
+        name: "{{ eap_service }}"
+        state: restarted
