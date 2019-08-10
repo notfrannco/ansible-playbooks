@@ -1,30 +1,58 @@
 ---
 - name: Playbook para agregar usuario ansible
-  hosts: # todos los nodos a administrar 
+  hosts: hml # todos los nodos a administrar 
+  vars:
+    ansible_local_user: ansible
   tasks:
-    - name: asegurarse que existe el grupo ansible
+    - name: asegurarse que existe el grupo {{ ansible_local_user }}
       group:
-        name: ansible
+        name: "{{ ansible_local_user }}"
         state: present
+        system: yes
 
-    - name: add ansible sudoers file
+    - name: add {{ ansible_local_user }} sudoers file
       copy:
-        content: "%ansible ALL=(ALL) NOPASSWD: ALL"
-        dest: /etc/sudoers.d/ansible
+        content: "%{{ ansible_local_user }} ALL=(ALL) NOPASSWD: ALL"
+        dest: /etc/sudoers.d/{{ ansible_local_user }}
+        validate: '/usr/sbin/visudo -cf %s'
+        mode: '0440'
 
-    - name: add user ansible
+    - name: add user {{ ansible_local_user }}
       user:
-        name: "ansible"
-        group: ansible
-        home: /home/ansible/
+        name: "{{ ansible_local_user }}"
+        group: "{{ ansible_local_user }}"
+        home: "/home/{{ ansible_local_user }}/"
         shell: /bin/bash
         state: present
+        expires: -1
+        system: yes
         password: # encrypt passwd
+      notify:
+        - ansible password does not expires
 
     - name: Set ssh keybase login
       authorized_key:
-        user: ansible
+        user: "{{ ansible_local_user }}"
+        path: /home/{{ ansible_local_user }}/.ssh/authorized_keys
         key: "{{ item }}"
       with_file:
         - /home/ansible/.ssh/id_rsa.pub
+
+          ##    - name: Allow user ansible user in sshd config
+          ##      lineinfile:
+          ##        path: /etc/ssh/sshd_config
+          ##        insertafter: '^AllowGroups |^#AllowGroups'
+          ##        line: 'AllowGroups {{ ansible_local_user }}'
+          ##        validate: /usr/sbin/sshd -t -f %s
+          ##      notify:
+          ##        - restart sshd
+  
+  handlers:
+    - name: restart sshd
+      service:
+        name: sshd
+        state: restarted
+    - name: ansible password does not expires
+      command: "chage -m -1 -M -1 -W -1 -E -1 {{ ansible_local_user }}"
+
 ...
