@@ -26,7 +26,7 @@
         state: present
         expires: -1
         system: yes
-        password: # encrypt passwd
+        password: "$6$Moax5e8EkpgMswj9$EGMY9DSGPAMAd0zw38Gsowzsx4Vre4LtIhBgIr7fwWvkRtfCGJeCrcdgWuUlUYxyNjlwMwnicGnD1aJnjga6v1"
       notify:
         - ansible password does not expires
 
