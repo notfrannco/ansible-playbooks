@@ -1,6 +1,6 @@
 ---
 - name: Playbook para agregar usuario ansible
-  hosts: {{ target }} # todos los nodos a administrar 
+  hosts: "{{ target }}" # todos los nodos a administrar 
   vars:
     ansible_local_user: ansible
   tasks:
