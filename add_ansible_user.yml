@@ -1,6 +1,6 @@
 ---
 - name: Playbook para agregar usuario ansible
-  hosts: "{{ target }}" # todos los nodos a administrar 
+  hosts: {{ target }} # todos los nodos a administrar 
   vars:
     ansible_local_user: ansible
   tasks:
@@ -30,26 +30,13 @@
       notify:
         - ansible password does not expires
 
-    #- name: Set ssh keybase login
-    #  authorized_key:
-    #    user: "{{ ansible_local_user }}"
-    #    path: /home/{{ ansible_local_user }}/.ssh/authorized_keys
-    #    key: "{{ item }}"
-    #  with_file:
-    #    - "{{ lookup('file', '/home/{{ ansible_local_user }}' + '/.ssh/id_rsa.pub') }}"
-    - name: ensure authorized_keys exists
-      file:
+    - name: Set ssh keybase login
+      authorized_key:
+        user: "{{ ansible_local_user }}"
         path: /home/{{ ansible_local_user }}/.ssh/authorized_keys
-        recurse: yes
-        state: directory
-        owner: "{{ ansible_local_user }}"
-        group: "{{ ansible_local_user }}"
-    
-    - name: copy the id_rsa.pub
-      copy:
-        src: /home/{{ ansible_local_user }}/.ssh/id_rsa.pub
-        dest: /home/{{ ansible_local_user }}/.ssh/authorized_keys
-
+        key: "{{ item }}"
+      with_file:
+        - /home/{{ ansible_local_user }}/.ssh/id_rsa.pub
   handlers:
     - name: ansible password does not expires
       command: "chage -m -1 -M -1 -W -1 -E -1 {{ ansible_local_user }}"
