@@ -1,0 +1,19 @@
+---
+- name: Hosts setup for oscap scan 
+  hosts: all
+  gather_facts: true
+  strategy: free
+  become: true
+  tasks:
+    - name: Install necesary packages
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - openscap-scanner
+        - scap-security-guide
+
+    - name: Copy de DS for centos 7
+      copy:
+        src: files/ssg-centos7-ds.xml 
+        dest: /usr/share/xml/scap/ssg/content/

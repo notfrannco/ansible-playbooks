@@ -1,0 +1,39 @@
+---
+- name: Openscap Report
+  hosts: all
+  become: true
+  vars:
+    oscap_profile: xccdf_org.ssgproject.content_profile_pci-dss
+    data_stream_home: "/usr/share/xml/scap/ssg/content/"
+    report_name: "reporte"
+    report_prefix: "{{ ansible_date_time.date }}-{{ ansible_default_ipv4.address }}-{{ inventory_hostname }}"
+    report_dest: "files/hardening_reports/"
+  tasks:
+    - name: Create xml scan report
+      shell: >
+        oscap xccdf eval --profile {{ oscap_profile }}
+        --results /tmp/{{ report_prefix }}-{{ report_name }}.xml /usr/share/xml/scap/ssg/content/ssg-centos{{ ansible_distribution_major_version }}-ds.xml
+      register: result
+      when: ansible_distribution == "CentOS"
+      ignore_errors: yes
+      failed_when: result.rc >= 3
+
+    - name: Create a html report
+      shell: oscap xccdf generate report /tmp/{{ report_prefix }}-{{ report_name }}.xml  > /tmp/{{ report_prefix }}-{{ report_name }}.html
+      when: ansible_distribution == "CentOS"
+      ignore_errors: yes
+      failed_when: result.rc >= 3
+
+    - name: Copy the report to the ansible master
+      fetch:
+        src: /tmp/{{ report_prefix }}-{{ report_name }}.html
+        dest: "{{ report_dest | default('files') }}"
+        flat: yes
+      tags:
+        - fetch
+
+    - name: Clean up
+      file:
+        path: /tmp/{{ report_prefix }}-{{ report_name }}.html
+        state: absent
+...
