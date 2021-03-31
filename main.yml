@@ -4906,11 +4906,11 @@
     
 
 # Audit rules
-    - name: clear rules.d folder
-      shell: rm -rf /etc/audit/rules.d/*
-      ignore_errors: true
-      tags:
-        - auditd
+    #- name: clear rules.d folder
+    #  shell: rm -rf /etc/audit/rules.d/*
+    #  ignore_errors: true
+    #  tags:
+    #    - auditd
 
     - name: copy audit rules
       copy:
