@@ -76,3 +76,39 @@
       tags:
         - pause
 ...
+
+
+
+# Version inicial
+---
+- name: Restart jboss eap service
+  hosts: all
+  serial: 1
+  vars:
+    eap_service: "jboss-eap"
+  tasks:
+    - name: Service stop
+      service:
+        name: "{{ eap_service }}"
+        state: stopped
+      tags:
+        - service_stop
+
+    - name: Service start
+      service:
+        name: "{{ eap_service }}"
+        state: started
+      tags:
+        - service_start
+
+    - name: wait for service to start
+      uri:
+        url: "http://{{ ansible_default_ipv4.address }}:8080"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 60
+      delay: 1
+      tags:
+        - delay
+...
