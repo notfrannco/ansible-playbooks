@@ -1,0 +1,78 @@
+---
+# Restart JBoss EAP gracefully.
+# Playbook to restart JBoss EAP, it will only restart services, unless there is a hung JVM, and then it will reboot the system
+# Verify variables with seconds to wait to allow space to services to fully start/stop
+# If there is an error with for example group of slaves1, the playbook will stop the playbook and as a result with not restart slaves2 group.
+- name: Playbook restart jboss by groups gracefully
+  hosts: slaves01:slaves02
+  become: True
+  serial: yes
+  vars:
+    seconds_to_wait_to_stop: 10
+    seconds_to_wait_to_start: 60 
+  tasks:
+    - name: Stop JBoss EAP services host {{ ansible_hostname }}
+      service:
+        name: jboss-eap
+        state: stopped
+      ignore_errors: true
+      tags:
+        - restart_jboss
+
+    - name: Wait for the JBoss EAP to fully stop on host {{ ansible_hostname }}
+      uri:
+        url: "http://{{ ansible_facts['default_ipv4']['address'] }}:8080"
+        status_code: -1
+      register: service_exit_code
+      until: service_exit_code.status == -1
+      retries: 60
+      delay: 10 
+      tags:
+        - status_check
+
+    - name: Debug exit code
+      debug:
+        var: service_exit_code
+
+    - name: Wait {{ seconds_to_wait_to_stop }} second to JBoss EAP to stop
+      pause:
+        seconds: "{{ seconds_to_wait_to_stop }}"
+      tags:
+        - pause
+
+    - name: Verify if all JVM process are down in host {{ ansible_hostname }}
+      shell: "ps aux | grep [j]ava"
+      register: ps_exit_code
+      ignore_errors: yes
+      tags:
+        - status_check
+      
+    - name: Reboot machine if some JVM is still locked/hung 
+      reboot:
+      when: ps_exit_code.rc == 0
+      tags:
+        - restart_jboss
+
+    - name: Start JBoss EAP if no JVM JVM is still locked/hung
+      service:
+        name: jboss-eap
+        state: started
+      when: ps_exit_code.rc != 0
+
+    - name: Wait for the JBoss EAP to fully start on host {{ ansible_hostname }}
+      uri:
+        url: "http://{{ ansible_facts['default_ipv4']['address'] }}:8080"
+        status_code: 200
+      register: service_exit_code
+      until: "service_exit_code.status == 200"
+      retries: 60
+      delay: 10 
+      tags:
+        - status_check
+
+    - name: Wait {{ seconds_to_wait_to_start }} second to JBoss EAP to start
+      pause:
+        seconds: "{{ seconds_to_wait_to_start }}"
+      tags:
+        - pause
+...
