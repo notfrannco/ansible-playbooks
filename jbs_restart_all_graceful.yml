@@ -1,15 +1,18 @@
 ---
 # Restart JBoss EAP gracefully.
 # Playbook to restart JBoss EAP, it will only restart services, unless there is a hung JVM, and then it will reboot the system
-# Verify variables with seconds to wait to allow space to services to fully start/stop
 # If there is an error with for example group of slaves1, the playbook will stop the playbook and as a result with not restart slaves2 group.
+# Disclaimers:
+#   - Verify variables with seconds to wait to allow space to services to fully start/stop
+#   - Customize URI task that waits EAP to start with a Health Check URL from the app that
+#   takes to initialize longer in time
 - name: Playbook restart jboss by groups gracefully
   hosts: slaves01:slaves02
   become: True
   serial: yes
   vars:
-    seconds_to_wait_to_stop: 10
-    seconds_to_wait_to_start: 60 
+    seconds_to_wait_to_stop: 20
+    seconds_to_wait_to_start: 300 
   tasks:
     - name: Stop JBoss EAP services host {{ ansible_hostname }}
       service:
@@ -21,12 +24,13 @@
 
     - name: Wait for the JBoss EAP to fully stop on host {{ ansible_hostname }}
       uri:
-        url: "http://{{ ansible_facts['default_ipv4']['address'] }}:8080"
+        url: "http://{{ ansible_default_ipv4.address }}:8080"
         status_code: -1
       register: service_exit_code
       until: service_exit_code.status == -1
-      retries: 60
-      delay: 10 
+      retries: 60 
+      delay: 10
+      ignore_errors: yes
       tags:
         - status_check
 
@@ -58,6 +62,8 @@
         name: jboss-eap
         state: started
       when: ps_exit_code.rc != 0
+      tags:
+        - restart_jboss
 
     - name: Wait for the JBoss EAP to fully start on host {{ ansible_hostname }}
       uri:
