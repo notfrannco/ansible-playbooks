@@ -1,0 +1,4 @@
+---
+collections:
+- arubanetworks.aos_switch
+- community.general
