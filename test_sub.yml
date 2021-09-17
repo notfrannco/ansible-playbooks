@@ -1,0 +1,12 @@
+---
+- name: Hosts setup for oscap scan 
+  hosts: all
+  become: true
+  tasks:
+    - name: redahat
+      redhat_subscription:
+        org_id: "Test"
+        force_register: yes
+        server_hostname: https://satellite.test.com.py
+        server_insecure: enable
+        rhsm_baseurl: https://satellite.test.com.py/pulp/repos
