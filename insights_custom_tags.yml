@@ -1,0 +1,16 @@
+---
+- name: Configure Red Hat Insights Custom tags
+  hosts: "{{ servers | default('lab') }}"
+  gather_facts: true
+  become: true
+  vars:
+    tags_dir: "/etc/insights-client/"
+  tasks:
+    - name: copy the tag file
+      template:
+        src: tags.yaml
+        dest: "{{ tags_dir }}" 
+
+    - name: run insights client
+      shell: insights-client
+      ignore_errors: yes
